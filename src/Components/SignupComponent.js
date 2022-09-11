@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import FormInput from './FormInput'
 
 const Signup = (props)=>{
     const [formValues, setFormValues] = useState({})
-
-    useEffect(()=>{
-        console.log(formValues)
-    })
-
+    const [error, setError]= useState('no errors')
+    const navigate = useNavigate
 
     const validateInputs = async ()=>{
         return inputs.every(item=>{
@@ -16,8 +14,6 @@ const Signup = (props)=>{
         })
         
     }
-
-
 
     function handleBlur(e, func){
         func('true')
@@ -73,21 +69,26 @@ const Signup = (props)=>{
                     {...input}></FormInput>
                 )
               })}
+                <button  onClick={(e)=>{
+                        e.preventDefault()
+                        if(allInputsValid){
+                         props.signup(formValues, navigate)   
+                        }
+                        
 
-                    
-                
-                <button onClick={async ()=>{
-                    const valid = await validateInputs
-                    if(valid){
-                        console.log('true inside ')
-                        props.signup({...formValues})
-                    } else {
-                        console.log('false')
-                    }
 
-                }}>Sign Up</button>
+          
+                        
+                    // const valid = await validateInputs
+                    // if(valid){
+                    //     props.signup(formValues)
+                    // } else {
+                    //     console.log('false')
+                    // }
+                }
+                }>Sign Up</button>
                 <button>Log In</button>
-                <button onClick={validateInputs}>Test</button>
+                <div>{error}</div>
             </form>
               
                 

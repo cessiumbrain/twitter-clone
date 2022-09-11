@@ -7,7 +7,8 @@ import ReactDOM from "react-dom/client";
 import {
   BrowserRouter,
   Routes,
-  Route
+  Route,
+  useNavigate
 } from "react-router-dom";
 import { createClient } from "@supabase/supabase-js";
 import { useFilePicker } from "use-file-picker";
@@ -23,6 +24,7 @@ import Settings from "./SettingsComponent";
 import NewsFeed from "./NewsFeedComponent";
 import Home from "./HomeComponent";
 import Login from "./LoginComponent";
+import ErrorPage from "./ErrorPage";
 
 const supabase = createClient(process.env.REACT_APP_API_URL, process.env.REACT_APP_API_KEY)
 
@@ -34,9 +36,6 @@ class Main extends Component{
         }
     }
     
-
-    
-
     login = async (email, password) =>{
         const { user, error } = await supabase.auth.signIn({
             email: email,
@@ -69,28 +68,40 @@ class Main extends Component{
 
     }
     
-    signup = async (formValues) =>{
-        const {username, email, password, displayName} = formValues
-        console.log(username, email, password, displayName)
-        //create Auth Account
-        // const {data: userData, error: userError } = await supabase.auth.signUp({
-        //     email: email,
-        //     password: password
-        //   })
-        // console.log(userData, userError)
+    signup = async (formValues, navFunc) =>{
+        // const {username, email, password, displayName} = formValues
+        console.log(formValues)
+        // create Auth Account
+        supabase.auth.signUp({
+            email: formValues.email,
+            password: formValues.password
+          })
+            //then block for signup
+            .then(async (userData)=>{
+                console.log(userData)
+                // create User DB row
+                const {data: dbData, error: dbError} = await supabase
+                .from('Users')
+                .insert([{
+                    username: formValues.username,
+                    display_name: formValues.displayName,
+                    auth_id: userData.user.id,
+                }]).select('*')
+
+                this.setState({
+                    currentUser: dbData
+                }, ()=>console.log(dbData))   
+
+                
+            })
+            //catch block
+            .catch(error=>{
+                console.log(error)
+            })
+
         //------------------------------------>
         //create User row in db
-        // const {data: dbData, error: dbError} = await supabase.
-        //     from('Users')
-        //     .insert([{
-        //         username: username,
-        //         display_name: displayName,
-        //         auth_id: userData.user.id,
-        //     }]).select('*')
-
-        // this.setState({
-        //     currentUser: dbData
-        // }, ()=>console.log(dbData))    
+ 
 
     }
     
@@ -121,6 +132,7 @@ class Main extends Component{
                          
                          : 
                          <>
+                         <Route path="/error" element={<ErrorPage></ErrorPage>}></Route>
                          <Route path="/" element={
                             <Signup
                                 signup={this.signup}></Signup>
